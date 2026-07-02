@@ -51,7 +51,7 @@ jobs:
 
       - name: Copy Assets
         run: |
-          mkdir publish\Assets
+          if (!(Test-Path publish\Assets)) { New-Item -ItemType Directory -Path publish\Assets }
           xcopy Assets publish\Assets /E /I /Y
 
       - name: Upload artifact
