@@ -1,5 +1,7 @@
 # Pocket Pal 🐾
 
+(please note that the following is a work in progress and may not be completed yet)
+
 *A lightweight virtual desktop pet for Windows 11.*
 
 Pocket Pal is a sprite-based desktop companion that lives along the bottom of your screen. It wanders around, idles, runs, sleeps, and reacts naturally while staying out of your way.
