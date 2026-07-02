@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <!-- NotifyIcon (system tray) comes from WinForms; this does not turn the app into a WinForms app. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>PocketPal</AssemblyName>
+    <RootNamespace>PocketPal</RootNamespace>
+    <Platforms>x64</Platforms>
+    <StartupObject>PocketPal.App</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ship all sprite assets and copy newer files on build -->
+    <None Include="Assets\Sprites\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\tray.ico" Condition="Exists('Assets\tray.ico')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

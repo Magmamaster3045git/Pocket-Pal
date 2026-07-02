@@ -1,189 +1,153 @@
-# Pocket Pal 🐾
+# Pocket Pal
 
-(please note that the following is a work in progress and may not be completed yet)
+A lightweight virtual desktop pet for Windows 11. Runs as a transparent,
+click-through, borderless overlay that walks/runs/idles/sleeps/jumps along
+the bottom of your screen, built as a clean foundation for a much larger
+project.
 
-*A lightweight virtual desktop pet for Windows 11.*
+## Tech stack
 
-Pocket Pal is a sprite-based desktop companion that lives along the bottom of your screen. It wanders around, idles, runs, sleeps, and reacts naturally while staying out of your way.
+- C# / .NET 8
+- WPF (chosen over WinUI 3 for simpler, more reliable click-through /
+  transparent-window support and single-file `.exe` deployment)
+- Sprite-sheet animation, fixed at 8 FPS
+- Win32 interop for click-through + multi-monitor via `System.Windows.Forms.Screen`
 
-The goal of this project is to create a clean, modular foundation that can grow into a fully featured virtual pet with additional behaviors, customization, and mod support.
+## Requirements to build
 
----
+- Windows 10/11
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- Visual Studio 2022 (17.8+) with the ".NET desktop development" workload,
+  **or** just the `dotnet` CLI
 
-## ✨ Features
+> This project was authored and organized outside of Windows, so it has not
+> been compiled/run in this environment. The code follows standard .NET 8 /
+> WPF patterns throughout, but do a build on your machine as the first step
+> and report back if anything doesn't compile — happy to fix immediately.
 
-### Current
+## Running it
 
-- Transparent desktop window
-- Borderless application
-- Sprite-sheet animations
-- Fixed **8 FPS** animation system
-- Walking and running
-- Idle behavior
-- Sleep state
-- Jumping and falling
-- Random movement
-- Screen edge detection
-- Modular architecture
-
-### Planned
-
-- Hunger and happiness system
-- Toys and interactions
-- Pet accessories
-- Multiple pet support
-- Save/load system
-- Sound effects
-- Personality traits
-- Plugin support
-- Modding support
-- Additional animations
-
----
-
-## 🛠 Tech Stack
-
-- **Language:** C#
-- **Framework:** .NET 8
-- **UI:** WinUI 3 (preferred) or WPF
-- **Rendering:** Sprite-based
-- **Target Platform:** Windows 11
-
----
-
-## 🎞 Animation System
-
-Pocket Pal uses sprite-sheet animations with a retro feel.
-
-- Fixed **8 FPS** playback
-- Independent frame counts
-- Automatic sprite loading
-- Easy to add new animations
-- Smooth state transitions
-
-### Asset Structure
-
-```text
-Assets/
-├── Idle/
-├── Walk/
-├── Run/
-├── Sleep/
-├── Jump/
-└── Fall/
+```
+cd PocketPal
+dotnet restore
+dotnet run --project PocketPal
 ```
 
----
+Or open `PocketPal.sln` in Visual Studio and press F5.
 
-## 🐶 Pet States
+On launch you'll see a small orange placeholder blob-critter walking,
+running, idling, sitting, sleeping, and jumping along the bottom of your
+primary monitor. Right-click the system tray icon to exit.
 
-The pet is controlled using a simple state machine.
+## Project layout
 
-Current states include:
-
-- Idle
-- Walking
-- Running
-- Sleeping
-- Jumping
-- Falling
-
-Only one state is active at any time, making the system easy to maintain and extend.
-
----
-
-## 🚶 Movement
-
-Pocket Pal can:
-
-- Walk across the bottom of the screen
-- Run occasionally
-- Stop to idle
-- Turn around at screen edges
-- Jump using simple gravity
-- Choose actions randomly
-
-Movement is smooth while animations remain locked to **8 FPS**.
-
----
-
-## 📁 Project Structure
-
-```text
+```
 PocketPal/
-│
-├── Assets/
-│   ├── Idle/
-│   ├── Walk/
-│   ├── Run/
-│   ├── Sleep/
-│   └── Jump/
-│
-├── Animation/
-├── AssetLoader/
-├── Movement/
-├── Pet/
-├── Rendering/
-├── StateMachine/
-├── Settings/
-└── Utilities/
+  Assets/
+    AssetLoader/SpriteAssetLoader.cs   - scans Sprites/ folders, loads PNG frames
+    AnimationLibrary.cs                - maps PetState + Direction -> AnimationClip
+    Sprites/
+      Idle/  Walk_Left/  Walk_Right/  Run_Left/  Run_Right/
+      Sit/   Sleep/      Jump/        Fall/
+        frame_000.png, frame_001.png, ...
+  Animation/
+    AnimationClip.cs      - an ordered set of frames
+    AnimationPlayer.cs     - plays a clip at a fixed FPS (default 8), independent
+                              of how often the game loop ticks
+  Core/
+    GameLoop.cs            - ~60Hz composition-target tick, drives Update(dt)
+    PetEngine.cs            - composition root: state machine -> animation -> render
+  Models/
+    PetStateType.cs, AnimationKey.cs, Direction.cs, Vector2D.cs
+  Movement/
+    MovementController.cs   - position/velocity, gravity, edge-of-screen turning
+  Native/
+    NativeMethods.cs        - Win32 click-through / tool-window styles
+  Rendering/
+    PetRenderer.cs           - dumb "paint the current frame" layer, no logic
+  Settings/
+    AppSettings.cs, SettingsManager.cs - JSON persistence in %AppData%\PocketPal
+  StateMachine/
+    IPetState.cs, PetContext.cs, PetStateMachine.cs
+    States/ IdleState, WalkingState, RunningState, SittingState,
+            SleepingState, JumpingState, FallingState, PetBehaviorPicker
+  Tray/
+    TrayIconManager.cs      - system tray icon + Exit menu
+  Utilities/
+    ScreenHelper.cs          - multi-monitor work-area lookup + resolution-change events
+  MainWindow.xaml(.cs)       - transparent borderless window, wires everything together
+  App.xaml(.cs)
+
+tools/
+  generate_placeholder_sprites.py   - regenerates the placeholder blob art
 ```
 
----
+### Why it's split up this way
 
-## 🎯 Goals
+Each folder maps to one responsibility, and none of them know much about
+the others:
 
-- Lightweight and fast
-- Low CPU usage
-- Clean architecture
-- Easy to maintain
-- Easy to expand
-- Beginner-friendly
-- Open source
+- **States** decide *what* the pet is doing and *when* to stop doing it.
+- **MovementController** decides *where* the pet is, given a state's request
+  to move or jump. It has no idea what a "state" is.
+- **AnimationPlayer** decides *which frame* to show right now, on a fixed
+  clock, and has no idea what a "pet" is.
+- **PetRenderer** just paints whatever it's told. It has no idea what a
+  "state," "animation," or "movement" even means.
+- **PetEngine** is the only class that talks to all of them, once per tick,
+  in a fixed order: state → animation → render.
 
----
+This means, for example, a future "Hunger" system can watch `PetEngine`'s
+state changes and drain hunger while `Walking`/`Running`, without needing
+to touch `MovementController`, `AnimationPlayer`, or any state class.
 
-## 🗺 Roadmap
+## Adding a new animation (no code changes)
 
-- [ ] Transparent desktop window
-- [ ] Sprite renderer
-- [ ] Animation manager
-- [ ] State machine
-- [ ] Movement controller
-- [ ] Screen edge detection
-- [ ] System tray support
-- [ ] Save system
-- [ ] User interaction
-- [ ] Personality system
-- [ ] Accessories
-- [ ] Sound effects
-- [ ] Plugin API
-- [ ] Mod support
+Drop `frame_000.png`, `frame_001.png`, ... into
+`Assets/Sprites/<Name>/`. Any frame count works — `AnimationClip` reads
+whatever is there. To use it, you only need code changes if you're adding
+a **brand-new** state (see below); replacing/expanding an *existing*
+animation's frames requires zero code changes.
 
----
+## Adding a new state
 
-## 🤝 Contributing
+1. Add a value to `PetStateType` (Models/PetStateType.cs).
+2. Add a value to `AnimationKey` if it needs new art, and a matching
+   `Assets/Sprites/<Name>/` folder.
+3. Create a class implementing `IPetState` in `StateMachine/States/`.
+4. Map it in `AnimationLibrary.Resolve()`.
+5. Have `PetBehaviorPicker` (or whatever triggers it) return it.
 
-Contributions are welcome!
+No other file needs to change.
 
-You can help by:
+## Regenerating placeholder art
 
-- Reporting bugs
-- Suggesting new features
-- Improving documentation
-- Submitting pull requests
-- Creating new animations or pets
+```
+cd tools
+pip install pillow
+python generate_placeholder_sprites.py
+```
 
-Please keep code clean, modular, and well documented.
+This overwrites everything in `Assets/Sprites/`. Delete/replace any
+folder's PNGs with real art at any time — nothing else needs to change.
 
----
+## Known placeholders / next steps
 
-## 📄 License
-
-This project is licensed under the **MIT License**.
-
----
-
-## 🌟 Vision
-
-Pocket Pal aims to be a charming desktop companion that feels alive without getting in the way. The project prioritizes clean architecture, smooth performance, and an expandable design so new behaviors, pets, and community-made content can be added over time.
+- **Art**: current sprites are simple generated placeholders (a bobbing
+  orange blob), meant only to prove the pipeline end-to-end. Swap in real
+  pixel art whenever it's ready.
+- **Interactivity**: the window is click-through by design (per your
+  choice). `Native/NativeMethods.cs` already has a `MakeInteractive()`
+  method ready for when you want clicking/dragging/petting.
+- **Multi-monitor**: currently the pet lives on one monitor
+  (`AppSettings.PreferredMonitorIndex`, -1 = primary). Spawning one
+  `MainWindow` per monitor, or multiple pets, is a natural next step and
+  the architecture doesn't need to change to support it — `PetEngine` has
+  no static/singleton state.
+- **Settings persistence** already round-trips through
+  `%AppData%\PocketPal\settings.json` and has unused fields reserved
+  (`Hunger`, `Happiness`, `SoundEnabled`) so those future systems have a
+  home to write to right away.
+- **Sounds, save files, plugins/mods**: not implemented yet, but nothing
+  in the current design (fixed 8 FPS clock, decoupled states, folder-based
+  assets) will need to be reworked to add them — they're additive.

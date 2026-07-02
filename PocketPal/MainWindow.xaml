@@ -1,0 +1,17 @@
+<Window x:Class="PocketPal.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pocket Pal"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStartupLocation="Manual">
+    <Canvas x:Name="PetCanvas" Background="Transparent">
+        <Image x:Name="PetImage"
+               RenderOptions.BitmapScalingMode="NearestNeighbor"
+               Stretch="Fill" />
+    </Canvas>
+</Window>
