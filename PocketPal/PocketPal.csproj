@@ -14,16 +14,16 @@
     <Platforms>x64</Platforms>
     <StartupObject>PocketPal.App</StartupObject>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <Content Include="Assets\Sprites\**\*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   
     <Content Include="Assets\tray.ico" Condition="Exists('Assets\tray.ico')">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 
