@@ -13,7 +13,7 @@ public partial class App : System.Windows.Application
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        MessageBox.Show(
+        System.Windows.MessageBox.Show(
             $"Pocket Pal hit an unexpected error and needs to close:\n\n{e.Exception.Message}",
             "Pocket Pal",
             MessageBoxButton.OK,
