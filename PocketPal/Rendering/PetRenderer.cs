@@ -2,21 +2,17 @@ using System.Windows.Controls;
 using PocketPal.Animation;
 using PocketPal.Models;
 
+using WpfImage = System.Windows.Controls.Image;
+
 namespace PocketPal.Rendering;
 
-/// <summary>
-/// Draws whatever AnimationPlayer/MovementController currently say to draw.
-/// Deliberately has zero decision-making logic - it is a dumb "paint what
-/// I'm told" layer so rendering stays swappable (e.g. later replaced by a
-/// Win2D/SkiaSharp surface) without touching game logic.
-/// </summary>
 public sealed class PetRenderer
 {
-    private readonly Image _surface;
+    private readonly WpfImage _surface;
     private readonly Canvas _canvas;
     private readonly double _scale;
 
-    public PetRenderer(Image surface, Canvas canvas, double scale = 1.0)
+    public PetRenderer(WpfImage surface, Canvas canvas, double scale = 1.0)
     {
         _surface = surface;
         _canvas = canvas;
