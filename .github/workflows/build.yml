@@ -50,9 +50,7 @@ jobs:
           files: publish/PocketPal.exe
 
       - name: Copy Assets
-        run: |
-          if (!(Test-Path publish\Assets)) { New-Item -ItemType Directory -Path publish\Assets }
-          xcopy Assets publish\Assets /E /I /Y
+        run: xcopy PocketPal\Assets publish\Assets /E /I /Y
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
