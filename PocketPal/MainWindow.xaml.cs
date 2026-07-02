@@ -1,5 +1,7 @@
+using System;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Threading;
 using PocketPal.Assets;
 using PocketPal.Assets.AssetLoader;
 using PocketPal.Core;
@@ -31,7 +33,7 @@ public partial class MainWindow : Window
         _spriteScale = _settings.SpriteScale;
 
         _trayIcon.ExitRequested += OnExitRequested;
-        _trayIcon.ExitRequested += () => Application.Current.Shutdown();
+        _trayIcon.ExitRequested += () => System.Windows.Application.Current.Shutdown();
 
         _screenHelper.DisplaySettingsChanged += OnDisplaySettingsChanged;
 
@@ -42,13 +44,11 @@ public partial class MainWindow : Window
 
     private void OnExitRequested()
     {
-        // Placeholder for future graceful-shutdown hooks (save pet state, etc.)
         _settingsManager.Save(_settings);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        // Must happen after the Win32 window handle exists.
         var hwnd = new WindowInteropHelper(this).Handle;
         NativeMethods.MakeClickThrough(hwnd);
     }
@@ -63,14 +63,13 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            // Fail loudly but don't crash silently - a broken asset folder
-            // should be obvious to whoever is developing/deploying this.
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 $"Pocket Pal failed to load its sprites:\n\n{ex.Message}",
                 "Pocket Pal - Asset Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
-            Application.Current.Shutdown();
+
+            System.Windows.Application.Current.Shutdown();
             return;
         }
 
@@ -90,27 +89,29 @@ public partial class MainWindow : Window
         var movement = new MovementController
         {
             AreaWidth = PetCanvas.Width > 0 ? PetCanvas.Width : Width,
-            // Ground line = bottom of the window (which sits flush with the
-            // monitor's work area bottom), minus the sprite's own height,
-            // since Position tracks the sprite's top-left corner.
             GroundY = PetCanvas.Height - spriteHeight,
             SpriteWidth = idleClip.FrameWidth * _spriteScale
         };
-        movement.Position = new Models.Vector2D(movement.AreaWidth / 2, movement.GroundY);
+
+        movement.Position = new Models.Vector2D(
+            movement.AreaWidth / 2,
+            movement.GroundY);
 
         var renderer = new PetRenderer(PetImage, PetCanvas, _spriteScale);
 
         var random = new Random();
-        _engine = new PetEngine(movement, library, renderer, _settings.AnimationFramesPerSecond, random);
+        _engine = new PetEngine(
+            movement,
+            library,
+            renderer,
+            _settings.AnimationFramesPerSecond,
+            random);
     }
 
     private void PositionWindowOnMonitor()
     {
         var workArea = _screenHelper.GetWorkArea(_settings.PreferredMonitorIndex);
 
-        // The window spans the full width of the monitor's work area and
-        // is tall enough to comfortably fit jump height + sprite; it sits
-        // flush with the bottom of the work area (i.e. just above the taskbar).
         const double windowHeight = 260;
 
         Left = workArea.Left;
@@ -124,7 +125,6 @@ public partial class MainWindow : Window
 
     private void OnDisplaySettingsChanged()
     {
-        // Marshal back to the UI thread - SystemEvents fires off-thread.
         Dispatcher.Invoke(() =>
         {
             PositionWindowOnMonitor();
@@ -133,8 +133,6 @@ public partial class MainWindow : Window
             {
                 _engine.Movement.AreaWidth = PetCanvas.Width;
 
-                // Re-clamp position so the pet isn't left stranded off-screen
-                // after a resolution shrink.
                 var pos = _engine.Movement.Position;
                 double maxX = Math.Max(0, _engine.Movement.AreaWidth - _engine.Movement.SpriteWidth);
                 pos.X = Math.Min(pos.X, maxX);
