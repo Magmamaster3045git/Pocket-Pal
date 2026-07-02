@@ -1,11 +1,18 @@
+using PocketPal.Models;
+using PocketPal.StateMachine;
+
 namespace PocketPal.StateMachine.States;
 
-/// <summary>Pet descends under gravity until it lands, then returns to normal ground behavior.</summary>
+/// <summary>
+/// Pet falls until it lands.
+/// </summary>
 public sealed class FallingState : IPetState
 {
     public PetStateType Type => PetStateType.Falling;
 
-    public void Enter(PetContext context) { }
+    public void Enter(PetContext context)
+    {
+    }
 
     public IPetState? Update(PetContext context, double deltaSeconds)
     {
@@ -17,5 +24,7 @@ public sealed class FallingState : IPetState
         return null;
     }
 
-    public void Exit(PetContext context) { }
+    public void Exit(PetContext context)
+    {
+    }
 }
