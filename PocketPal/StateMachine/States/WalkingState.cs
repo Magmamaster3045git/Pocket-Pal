@@ -1,3 +1,6 @@
+using PocketPal.Models;
+using PocketPal.StateMachine;
+
 namespace PocketPal.StateMachine.States;
 
 /// <summary>
@@ -28,5 +31,7 @@ public sealed class WalkingState : IPetState
         return null;
     }
 
-    public void Exit(PetContext context) { }
+    public void Exit(PetContext context)
+    {
+    }
 }
