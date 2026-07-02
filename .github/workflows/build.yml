@@ -25,7 +25,7 @@ jobs:
         run: dotnet restore PocketPal.sln
 
       - name: Publish PocketPal
-        run: dotnet publish PocketPal.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false
+        run: dotnet publish PocketPal/PocketPal.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false
 
       - name: Publish self-contained single-file exe
         run: >
