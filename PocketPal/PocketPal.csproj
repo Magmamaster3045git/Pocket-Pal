@@ -16,13 +16,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Ship all sprite assets and copy newer files on build -->
-    <None Include="Assets\Sprites\**\*.*">
+    <Content Include="Assets\Sprites\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\tray.ico" Condition="Exists('Assets\tray.ico')">
+    </Content>
+  
+    <Content Include="Assets\tray.ico" Condition="Exists('Assets\tray.ico')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
 </Project>
