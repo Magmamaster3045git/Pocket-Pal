@@ -16,7 +16,7 @@
   </PropertyGroup>
     
   <ItemGroup>
-    <Content Include="Assets\Sprites\**\*">
+    <Content Include="Assets\**\*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
