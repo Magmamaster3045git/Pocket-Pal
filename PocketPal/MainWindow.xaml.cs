@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using PocketPal.Assets;
@@ -23,14 +24,17 @@ public partial class MainWindow : Window
 
     private PetEngine? _engine;
     private GameLoop? _loop;
-    private double _spriteScale;
+
+    private double _spriteScale = 0.4;
+    private double _groundY;
+
+    private DispatcherTimer? _fullscreenTimer;
 
     public MainWindow()
     {
         InitializeComponent();
 
         _settings = _settingsManager.Load();
-        _spriteScale = 0.4;
 
         _trayIcon.ExitRequested += OnExitRequested;
         _trayIcon.ExitRequested += () => System.Windows.Application.Current.Shutdown();
@@ -40,6 +44,8 @@ public partial class MainWindow : Window
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
         Closed += OnClosed;
+
+        SetupFullscreenDetection();
     }
 
     private void OnExitRequested()
@@ -84,28 +90,31 @@ public partial class MainWindow : Window
         var library = new AnimationLibrary(clips);
 
         var idleClip = library.Get(Models.AnimationKey.Idle);
+
         double spriteHeight = idleClip.FrameHeight * _spriteScale;
+
+        var workArea = SystemParameters.WorkArea;
+        _groundY = workArea.Bottom - spriteHeight;
 
         var movement = new MovementController
         {
             AreaWidth = PetCanvas.Width > 0 ? PetCanvas.Width : Width,
-            GroundY = PetCanvas.Height - spriteHeight,
+            GroundY = _groundY,
             SpriteWidth = idleClip.FrameWidth * _spriteScale
         };
 
         movement.Position = new Models.Vector2D(
             movement.AreaWidth / 2,
-            movement.GroundY);
+            _groundY);
 
         var renderer = new PetRenderer(PetImage, PetCanvas, _spriteScale);
 
-        var random = new Random();
         _engine = new PetEngine(
             movement,
             library,
             renderer,
             _settings.AnimationFramesPerSecond,
-            random);
+            new Random());
     }
 
     private void PositionWindowOnMonitor()
@@ -121,6 +130,44 @@ public partial class MainWindow : Window
 
         PetCanvas.Width = Width;
         PetCanvas.Height = Height;
+    }
+
+    // CLICK TO MOVE
+    protected override void OnMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseDown(e);
+
+        if (_engine is null) return;
+
+        var pos = e.GetPosition(this);
+
+        _engine.Movement.Position = new Models.Vector2D(
+            pos.X,
+            _engine.Movement.Position.Y);
+    }
+
+    // FULLSCREEN + F11 SUPPORT
+    private void SetupFullscreenDetection()
+    {
+        _fullscreenTimer = new DispatcherTimer();
+        _fullscreenTimer.Interval = TimeSpan.FromMilliseconds(500);
+        _fullscreenTimer.Tick += (_, __) =>
+        {
+            var workArea = SystemParameters.WorkArea;
+            var screenHeight = SystemParameters.PrimaryScreenHeight;
+
+            // If fullscreen app is active, WorkArea == full screen or very close
+            if (Math.Abs(workArea.Height - screenHeight) < 2)
+            {
+                this.Show();
+            }
+            else
+            {
+                this.Hide();
+            }
+        };
+
+        _fullscreenTimer.Start();
     }
 
     private void OnDisplaySettingsChanged()
@@ -146,5 +193,6 @@ public partial class MainWindow : Window
         _loop?.Stop();
         _screenHelper.Dispose();
         _trayIcon.Dispose();
+        _fullscreenTimer?.Stop();
     }
 }
