@@ -25,7 +25,7 @@ public partial class MainWindow : Window
     private PetEngine? _engine;
     private GameLoop? _loop;
 
-    private double _spriteScale = 0.4;
+    private double _spriteScale = 0.5;
     private double _groundY;
 
     private DispatcherTimer? _fullscreenTimer;
