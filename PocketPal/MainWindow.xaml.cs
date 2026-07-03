@@ -30,7 +30,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _settings = _settingsManager.Load();
-        _spriteScale = _settings.SpriteScale;
+        _spriteScale = 0.4;
 
         _trayIcon.ExitRequested += OnExitRequested;
         _trayIcon.ExitRequested += () => System.Windows.Application.Current.Shutdown();
