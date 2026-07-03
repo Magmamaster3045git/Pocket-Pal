@@ -34,6 +34,9 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        Topmost = true;
+        ShowInTaskbar = false;
+
         _settings = _settingsManager.Load();
 
         _trayIcon.ExitRequested += OnExitRequested;
@@ -94,7 +97,7 @@ public partial class MainWindow : Window
         double spriteHeight = idleClip.FrameHeight * _spriteScale;
 
         var workArea = SystemParameters.WorkArea;
-        _groundY = workArea.Bottom - spriteHeight;
+        _groundY = PetCanvas.Height - spriteHeight;
 
         var movement = new MovementController
         {
