@@ -34,8 +34,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // IMPORTANT: keep on top so it never disappears behind taskbar
         Topmost = true;
         ShowInTaskbar = false;
+        ShowActivated = true;
 
         _settings = _settingsManager.Load();
 
@@ -59,7 +61,12 @@ public partial class MainWindow : Window
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
         var hwnd = new WindowInteropHelper(this).Handle;
+
+        // click-through behavior
         NativeMethods.MakeClickThrough(hwnd);
+
+        // ensure layering is stable
+        Topmost = true;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -82,6 +89,15 @@ public partial class MainWindow : Window
             return;
         }
 
+        // force visible spawn position
+        if (_engine != null)
+        {
+            _engine.Movement.Position = new Models.Vector2D(
+                PetCanvas.Width / 2,
+                _groundY
+            );
+        }
+
         _loop = new GameLoop(delta => _engine!.Update(delta));
         _loop.Start();
     }
@@ -96,8 +112,10 @@ public partial class MainWindow : Window
 
         double spriteHeight = idleClip.FrameHeight * _spriteScale;
 
+        // FIXED: correct screen-based grounding
         var workArea = SystemParameters.WorkArea;
-        _groundY = PetCanvas.Height - spriteHeight;
+
+        _groundY = (workArea.Bottom - Top) - spriteHeight;
 
         var movement = new MovementController
         {
@@ -144,29 +162,31 @@ public partial class MainWindow : Window
 
         var pos = e.GetPosition(this);
 
+        // move X only, Y stays grounded
         _engine.Movement.Position = new Models.Vector2D(
             pos.X,
-            _engine.Movement.Position.Y);
+            _engine.Movement.Position.Y
+        );
     }
 
-    // FULLSCREEN + F11 SUPPORT
+    // FULLSCREEN DETECTION
     private void SetupFullscreenDetection()
     {
         _fullscreenTimer = new DispatcherTimer();
         _fullscreenTimer.Interval = TimeSpan.FromMilliseconds(500);
+
         _fullscreenTimer.Tick += (_, __) =>
         {
             var workArea = SystemParameters.WorkArea;
             var screenHeight = SystemParameters.PrimaryScreenHeight;
 
-            // If fullscreen app is active, WorkArea == full screen or very close
             if (Math.Abs(workArea.Height - screenHeight) < 2)
             {
-                this.Show();
+                Show();
             }
             else
             {
-                this.Hide();
+                Hide();
             }
         };
 
