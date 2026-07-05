@@ -33,8 +33,6 @@ public sealed class AnimationLibrary
             PetStateType.Running => direction == Direction.Left ? AnimationKey.Run_Left : AnimationKey.Run_Right,
             PetStateType.Sitting => AnimationKey.Sit,
             PetStateType.Sleeping => AnimationKey.Sleep,
-            PetStateType.Jumping => AnimationKey.Jump,
-            PetStateType.Falling => AnimationKey.Fall,
             _ => AnimationKey.Idle
         };
 
