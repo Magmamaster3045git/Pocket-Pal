@@ -14,7 +14,5 @@ public enum AnimationKey
     Run_Left,
     Run_Right,
     Sit,
-    Sleep,
-    Jump,
-    Fall
+    Sleep
 }
