@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -29,6 +30,36 @@ public partial class MainWindow : Window
     private double _groundY;
 
     private DispatcherTimer? _fullscreenTimer;
+    private DispatcherTimer? _topmostTimer;
+    private DispatcherTimer? _mouseListener;
+
+    // P/Invoke for global mouse tracking
+    private IntPtr _hookId = IntPtr.Zero;
+    private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
+    private LowLevelMouseProc? _mouseProc;
+
+    private const int WH_MOUSE_LL = 14;
+    private const int WM_LBUTTONDOWN = 0x0201;
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MSLLHOOKSTRUCT
+    {
+        public int x;
+        public int y;
+    }
 
     public MainWindow()
     {
@@ -51,6 +82,8 @@ public partial class MainWindow : Window
         Closed += OnClosed;
 
         SetupFullscreenDetection();
+        SetupTopmostTimer();
+        SetupMouseListener();
     }
 
     private void OnExitRequested()
@@ -169,6 +202,66 @@ public partial class MainWindow : Window
         );
     }
 
+    // Keep window always on top
+    private void SetupTopmostTimer()
+    {
+        _topmostTimer = new DispatcherTimer();
+        _topmostTimer.Interval = TimeSpan.FromMilliseconds(100);
+        _topmostTimer.Tick += (_, __) =>
+        {
+            if (!Topmost)
+            {
+                Topmost = true;
+            }
+        };
+        _topmostTimer.Start();
+    }
+
+    // Listen for global mouse clicks
+    private void SetupMouseListener()
+    {
+        _mouseProc = MouseHookCallback;
+        using (var curProcess = System.Diagnostics.Process.GetCurrentProcess())
+        using (var curModule = curProcess.MainModule)
+        {
+            if (curModule != null)
+            {
+                _hookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseProc, GetModuleHandle(curModule.ModuleName), 0);
+            }
+        }
+    }
+
+    private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDOWN)
+        {
+            var hookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+            
+            // Convert screen coordinates to pet window coordinates
+            var screenPoint = new System.Windows.Point(hookStruct.x, hookStruct.y);
+            var windowPoint = PointFromScreen(screenPoint);
+            
+            // Check if click is within our window bounds
+            if (windowPoint.X >= 0 && windowPoint.X <= Width && 
+                windowPoint.Y >= 0 && windowPoint.Y <= Height)
+            {
+                // Move pet to click location
+                if (_engine is not null)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        _engine.Movement.Position = new Models.Vector2D(
+                            windowPoint.X,
+                            _engine.Movement.Position.Y
+                        );
+                    });
+                }
+            }
+        }
+
+        return CallNextHookEx(_hookId, nCode, wParam, lParam);
+    }
+
     // FULLSCREEN DETECTION
     private void SetupFullscreenDetection()
     {
@@ -217,5 +310,11 @@ public partial class MainWindow : Window
         _screenHelper.Dispose();
         _trayIcon.Dispose();
         _fullscreenTimer?.Stop();
+        _topmostTimer?.Stop();
+        
+        if (_hookId != IntPtr.Zero)
+        {
+            UnhookWindowsHookEx(_hookId);
+        }
     }
 }
