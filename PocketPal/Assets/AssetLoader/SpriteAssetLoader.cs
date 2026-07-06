@@ -70,7 +70,7 @@ public sealed class SpriteAssetLoader
 
         // Sleep/Sit hold on the final pose rather than looping back to frame 0
         // by default in most desktop-pet art; adjust here if your art differs.
-        bool loop = key is not (AnimationKey.Jump or AnimationKey.Fall);
+        bool loop = true; // All remaining animations loop
 
         return new AnimationClip(key, frames, loop);
     }
