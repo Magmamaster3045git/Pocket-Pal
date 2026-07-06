@@ -8,7 +8,7 @@ internal static class PetBehaviorPicker
 {
     /// <summary>
     /// Picks a next state from the ground-based behaviors. Weighted so
-    /// idling/walking are common, running is less common, and jumping is rare.
+    /// idling/walking are common, running is less common, and sitting/sleeping are rare.
     /// </summary>
     public static IPetState PickNextGroundState(PetContext context)
     {
@@ -20,7 +20,6 @@ internal static class PetBehaviorPicker
             < 0.55 => new RunningState(),
             < 0.85 => new IdleState(),
             < 0.93 => new SittingState(),
-            < 0.97 => new JumpingState(),
             _ => new SleepingState()
         };
     }

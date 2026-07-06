@@ -10,7 +10,5 @@ public enum PetStateType
     Walking,
     Running,
     Sitting,
-    Sleeping,
-    Jumping,
-    Falling
+    Sleeping
 }

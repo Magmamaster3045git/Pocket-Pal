@@ -16,8 +16,6 @@ public sealed class MovementController
 
     public Direction Direction { get; set; } = Direction.Right;
 
-    public double GravityPixelsPerSecondSquared { get; set; } = 1400;
-
     /// <summary>Width of the bounding area the pet walks within (typically the monitor's work-area width).</summary>
     public double AreaWidth { get; set; }
 
@@ -40,30 +38,6 @@ public sealed class MovementController
         pos.X += signed * deltaSeconds;
         Position = pos;
         ClampToBoundsAndFlip();
-    }
-
-    public void StartJump(double initialVerticalSpeed)
-    {
-        Velocity = new Vector2D(Velocity.X, -Math.Abs(initialVerticalSpeed));
-    }
-
-    /// <summary>Applies gravity and integrates vertical position. Call every tick while airborne.</summary>
-    public void ApplyGravity(double deltaSeconds)
-    {
-        var vel = Velocity;
-        vel.Y += GravityPixelsPerSecondSquared * deltaSeconds;
-        Velocity = vel;
-
-        var pos = Position;
-        pos.Y += Velocity.Y * deltaSeconds;
-
-        if (pos.Y >= GroundY)
-        {
-            pos.Y = GroundY;
-            Velocity = new Vector2D(Velocity.X, 0);
-        }
-
-        Position = pos;
     }
 
     private void ClampToBoundsAndFlip()
