@@ -45,22 +45,30 @@ public sealed class PetEngine
 
     public void Update(double deltaSeconds)
     {
-        // NEW: If we have a destination, walk toward it.
+        // Click-to-move
         if (Movement.HasTarget)
         {
-            Movement.MoveTowardsTarget(220, deltaSeconds);
+            if (States.CurrentType != PetStateType.Running)
+            {
+                States.ForceTransition(new RunningState());
+            }
+    
+            Movement.MoveTowardsTarget(
+                RunningState.SpeedPixelsPerSecond,
+                deltaSeconds
+            );
         }
-
+    
         States.Update(deltaSeconds);
-
+    
+    
         AnimationClip clip = Animations.Resolve(
             States.CurrentType,
             Movement.Direction);
-
+    
         Player.Play(clip);
         Player.Update(deltaSeconds);
-
+    
         _renderer.DrawFrame(Player);
         _renderer.PositionSprite(Movement.Position);
     }
-}
