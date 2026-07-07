@@ -190,16 +190,15 @@ public partial class MainWindow : Window
     protected override void OnMouseDown(MouseButtonEventArgs e)
     {
         base.OnMouseDown(e);
-
-        if (_engine is null) return;
-
+    
+        if (_engine is null)
+            return;
+    
+    
         var pos = e.GetPosition(this);
-
-        // move X only, Y stays grounded
-        _engine.Movement.Position = new Models.Vector2D(
-            pos.X,
-            _engine.Movement.Position.Y
-        );
+    
+    
+        _engine.Movement.SetTarget(pos.X);
     }
 
     // Keep window always on top
