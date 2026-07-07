@@ -249,10 +249,7 @@ public partial class MainWindow : Window
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        _engine.Movement.Position = new Models.Vector2D(
-                            windowPoint.X,
-                            _engine.Movement.Position.Y
-                        );
+                        _engine.Movement.SetTarget(windowPoint.X);
                     });
                 }
             }
