@@ -95,15 +95,7 @@ public partial class MainWindow : Window
     {
         var hwnd = new WindowInteropHelper(this).Handle;
     
-        NativeMethods.SetWindowPos(
-            hwnd,
-            new IntPtr(-1),
-            0,
-            0,
-            0,
-            0,
-            0x0001 | 0x0002 | 0x0010
-        );
+        NativeMethods.KeepWindowAboveTaskbar(hwnd);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
