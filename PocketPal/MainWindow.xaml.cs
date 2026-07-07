@@ -223,10 +223,7 @@ public partial class MainWindow : Window
         _topmostTimer.Interval = TimeSpan.FromMilliseconds(100);
         _topmostTimer.Tick += (_, __) =>
         {
-            if (!Topmost)
-            {
-                Topmost = true;
-            }
+            ForceTopMost();
         };
         _topmostTimer.Start();
     }
