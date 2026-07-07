@@ -16,6 +16,11 @@ public sealed class MovementController
 
     public Direction Direction { get; set; } = Direction.Right;
 
+    // NEW: Target position for click-to-move
+    public double? TargetX { get; set; }
+
+    public bool HasTarget => TargetX.HasValue;
+
     /// <summary>Width of the bounding area the pet walks within (typically the monitor's work-area width).</summary>
     public double AreaWidth { get; set; }
 
@@ -37,6 +42,40 @@ public sealed class MovementController
         var pos = Position;
         pos.X += signed * deltaSeconds;
         Position = pos;
+        ClampToBoundsAndFlip();
+    }
+
+    // NEW: Smooth movement toward a clicked target
+    public void MoveTowardsTarget(double speedPixelsPerSecond, double deltaSeconds)
+    {
+        if (!TargetX.HasValue)
+            return;
+
+        var pos = Position;
+        double target = TargetX.Value;
+
+        // Close enough -> stop
+        if (Math.Abs(pos.X - target) < 2)
+        {
+            pos.X = target;
+            Position = pos;
+            TargetX = null;
+            return;
+        }
+
+        Direction = pos.X < target
+            ? Direction.Right
+            : Direction.Left;
+
+        double move = speedPixelsPerSecond * deltaSeconds;
+
+        if (Direction == Direction.Right)
+            pos.X = Math.Min(pos.X + move, target);
+        else
+            pos.X = Math.Max(pos.X - move, target);
+
+        Position = pos;
+
         ClampToBoundsAndFlip();
     }
 
