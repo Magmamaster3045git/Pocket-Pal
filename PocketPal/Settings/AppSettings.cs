@@ -24,4 +24,12 @@ public sealed class AppSettings
     public int Hunger { get; set; } = 100;
     public int Happiness { get; set; } = 100;
     public bool SoundEnabled { get; set; } = true;
+
+    public bool StartWithWindows { get; set; }
+    
+    public bool ClickThrough { get; set; } = true;
+    
+    public bool StaticMode { get; set; }
+    
+    public string SelectedCharacter { get; set; } = "Dog";
 }
