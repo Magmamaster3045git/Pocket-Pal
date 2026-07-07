@@ -45,7 +45,6 @@ public sealed class PetEngine
 
     public void Update(double deltaSeconds)
     {
-        // Click-to-move
         if (Movement.HasTarget)
         {
             if (States.CurrentType != PetStateType.Running)
