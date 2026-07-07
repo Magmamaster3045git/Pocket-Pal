@@ -241,8 +241,13 @@ public partial class MainWindow : Window
             var windowPoint = PointFromScreen(screenPoint);
             
             // Check if click is within our window bounds
-            if (windowPoint.X >= 0 && windowPoint.X <= Width && 
-                windowPoint.Y >= 0 && windowPoint.Y <= Height)
+            var screenHeight = SystemParameters.PrimaryScreenHeight;
+
+            // Only bottom 40 pixels = taskbar zone
+            bool clickedTaskbarArea =
+                hookStruct.y >= screenHeight - 40;
+            
+            if (clickedTaskbarArea)
             {
                 // Move pet to click location
                 if (_engine is not null)
