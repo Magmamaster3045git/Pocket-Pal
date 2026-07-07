@@ -27,7 +27,12 @@ public sealed class PetEngine
     public PetStateMachine States { get; }
     private readonly PetRenderer _renderer;
 
-    public PetEngine(MovementController movement, AnimationLibrary animations, PetRenderer renderer, int framesPerSecond, Random random)
+    public PetEngine(
+        MovementController movement,
+        AnimationLibrary animations,
+        PetRenderer renderer,
+        int framesPerSecond,
+        Random random)
     {
         Movement = movement;
         Animations = animations;
@@ -40,9 +45,18 @@ public sealed class PetEngine
 
     public void Update(double deltaSeconds)
     {
+        // NEW: If we have a destination, walk toward it.
+        if (Movement.HasTarget)
+        {
+            Movement.MoveTowardsTarget(220, deltaSeconds);
+        }
+
         States.Update(deltaSeconds);
 
-        AnimationClip clip = Animations.Resolve(States.CurrentType, Movement.Direction);
+        AnimationClip clip = Animations.Resolve(
+            States.CurrentType,
+            Movement.Direction);
+
         Player.Play(clip);
         Player.Update(deltaSeconds);
 
