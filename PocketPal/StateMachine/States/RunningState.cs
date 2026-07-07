@@ -18,7 +18,6 @@ public sealed class RunningState : IPetState
 
     public IPetState? Update(PetContext context, double deltaSeconds)
     {
-        // If the user clicked somewhere, move there instead of random running
         if (context.Movement.HasTarget)
         {
             context.Movement.MoveTowardsTarget(
@@ -29,14 +28,16 @@ public sealed class RunningState : IPetState
             return null;
         }
 
-        // Existing random running behaviour
+
         context.Movement.MoveHorizontal(
             SpeedPixelsPerSecond,
             deltaSeconds
         );
 
+
         if (context.TimeInState >= _duration)
             return PetBehaviorPicker.PickNextGroundState(context);
+
 
         return null;
     }
