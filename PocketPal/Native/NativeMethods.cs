@@ -67,7 +67,11 @@ internal static class NativeMethods
     public static void MakeInteractive(IntPtr hwnd)
     {
         int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    
+        // Remove click-through + no activation
         exStyle &= ~WS_EX_TRANSPARENT;
+        exStyle &= ~WS_EX_NOACTIVATE;
+    
         SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
     }
 }
