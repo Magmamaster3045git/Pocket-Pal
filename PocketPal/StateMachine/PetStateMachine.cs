@@ -6,43 +6,62 @@ namespace PocketPal.StateMachine;
 /// <summary>
 /// Owns exactly one active IPetState at a time and handles Enter/Exit
 /// lifecycle calls on transitions. This is the only class allowed to
-/// swap the current state - everything else just observes CurrentState.
+/// swap the current state.
 /// </summary>
 public sealed class PetStateMachine
 {
-    private readonly PetContext _context;
+    public PetContext Context { get; }
 
     public IPetState CurrentState { get; private set; }
+
     public event Action<IPetState>? StateChanged;
+
 
     public PetStateMachine(PetContext context, IPetState initialState)
     {
-        _context = context;
+        Context = context;
+
         CurrentState = initialState;
-        CurrentState.Enter(_context);
+        CurrentState.Enter(Context);
     }
+
 
     public PetStateType CurrentType => CurrentState.Type;
 
+
     public void Update(double deltaSeconds)
     {
-        _context.TimeInState += deltaSeconds;
+        Context.TimeInState += deltaSeconds;
 
-        IPetState? next = CurrentState.Update(_context, deltaSeconds);
+        IPetState? next = CurrentState.Update(
+            Context,
+            deltaSeconds
+        );
 
         if (next is not null)
             TransitionTo(next);
     }
 
+
     private void TransitionTo(IPetState next)
     {
-        CurrentState.Exit(_context);
+        CurrentState.Exit(Context);
+
         CurrentState = next;
-        _context.TimeInState = 0;
-        CurrentState.Enter(_context);
+
+        Context.TimeInState = 0;
+
+        CurrentState.Enter(Context);
+
         StateChanged?.Invoke(CurrentState);
     }
 
-    /// <summary>Force a transition (e.g. from a future "click to make pet jump" interaction).</summary>
-    public void ForceTransition(IPetState next) => TransitionTo(next);
+
+    /// <summary>
+    /// Force a transition, such as clicking the pet.
+    /// </summary>
+    public void ForceTransition(IPetState next)
+    {
+        TransitionTo(next);
+    }
 }
