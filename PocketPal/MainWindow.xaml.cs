@@ -104,8 +104,14 @@ public partial class MainWindow : Window
         var hwnd = new WindowInteropHelper(this).Handle;
 
         // click-through behavior
-        NativeMethods.MakeClickThrough(hwnd);
-
+        if (_settings.ClickThrough)
+        {
+            NativeMethods.MakeClickThrough(hwnd);
+        }
+        else
+        {
+            NativeMethods.RemoveClickThrough(hwnd);
+        }
         // ensure layering is stable
         Topmost = true;
     }
@@ -256,12 +262,20 @@ public partial class MainWindow : Window
             
             if (clickedTaskbarArea)
             {
-                // Move pet to click location
                 if (_engine is not null)
                 {
                     Dispatcher.Invoke(() =>
                     {
+                        // Cancel sitting
+                        _engine.States.Context.ForceSit = false;
+            
+                        // Set destination
                         _engine.Movement.SetTarget(windowPoint.X);
+            
+                        // Change to running animation/state
+                        _engine.States.ForceTransition(
+                            new RunningState()
+                        );
                     });
                 }
             }
