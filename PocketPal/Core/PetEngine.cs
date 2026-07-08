@@ -32,6 +32,7 @@ public sealed class PetEngine
 
         Player = new AnimationPlayer(framesPerSecond);
 
+
         var context = new PetContext(
             movement,
             animations,
@@ -39,6 +40,7 @@ public sealed class PetEngine
         {
             StaticMode = staticMode
         };
+
 
         States = new PetStateMachine(
             context,
@@ -48,21 +50,22 @@ public sealed class PetEngine
 
     public void Update(double deltaSeconds)
     {
-        // User click movement
-        if (Movement.HasTarget)
+        // If a target exists, ensure the pet is running.
+        // RunningState owns the actual movement.
+        if (Movement.HasTarget &&
+            States.CurrentType != PetStateType.Running)
         {
-            if (States.CurrentType != PetStateType.Running)
-            {
-                States.ForceTransition(new RunningState());
-            }
-
-            Movement.MoveTowardsTarget(
-                RunningState.SpeedPixelsPerSecond,
-                deltaSeconds);
+            States.ForceTransition(
+                new RunningState());
         }
 
 
-        // Normal AI updates
+        // State machine controls:
+        // - walking
+        // - running
+        // - sitting
+        // - sleeping
+        // - static mode behaviour
         States.Update(deltaSeconds);
 
 
