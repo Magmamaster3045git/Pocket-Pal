@@ -15,7 +15,18 @@ public sealed class SleepingState : IPetState
 
     public void Enter(PetContext context)
     {
-        _duration = 8.0 + context.Random.NextDouble() * 12.0;
+        if (context.StaticMode)
+        {
+            // Static Mode:
+            // longer relaxed sleeping periods
+            _duration = 15.0 + context.Random.NextDouble() * 30.0;
+        }
+        else
+        {
+            // Normal AI sleeping
+            _duration = 8.0 + context.Random.NextDouble() * 12.0;
+        }
+
 
         context.Movement.Velocity =
             new Vector2D(
@@ -33,10 +44,10 @@ public sealed class SleepingState : IPetState
 
 
         // Static Mode:
-        // never walk/run/idle, only swap between sleep and sit
+        // never wander, only swap resting poses
         if (context.StaticMode)
         {
-            return context.Random.NextDouble() < 0.5
+            return context.Random.Next(2) == 0
                 ? new SleepingState()
                 : new SittingState();
         }
