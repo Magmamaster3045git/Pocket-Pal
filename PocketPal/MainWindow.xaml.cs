@@ -32,7 +32,6 @@ public partial class MainWindow : Window
 
     private DispatcherTimer? _fullscreenTimer;
     private DispatcherTimer? _topmostTimer;
-    private DispatcherTimer? _mouseListener;
 
     private IntPtr _hookId = IntPtr.Zero;
     private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
@@ -42,14 +41,22 @@ public partial class MainWindow : Window
     private const int WM_LBUTTONDOWN = 0x0201;
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+    private static extern IntPtr SetWindowsHookEx(
+        int idHook,
+        LowLevelMouseProc lpfn,
+        IntPtr hMod,
+        uint dwThreadId);
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+    private static extern IntPtr CallNextHookEx(
+        IntPtr hhk,
+        int nCode,
+        IntPtr wParam,
+        IntPtr lParam);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     private static extern IntPtr GetModuleHandle(string lpModuleName);
@@ -60,6 +67,7 @@ public partial class MainWindow : Window
         public int x;
         public int y;
     }
+
 
     public MainWindow()
     {
@@ -72,7 +80,8 @@ public partial class MainWindow : Window
         _settings = _settingsManager.Load();
 
         _trayIcon.ExitRequested += OnExitRequested;
-        _trayIcon.ExitRequested += () => System.Windows.Application.Current.Shutdown();
+        _trayIcon.ExitRequested += () =>
+            System.Windows.Application.Current.Shutdown();
 
         _screenHelper.DisplaySettingsChanged += OnDisplaySettingsChanged;
 
@@ -85,16 +94,20 @@ public partial class MainWindow : Window
         SetupMouseListener();
     }
 
+
     private void OnExitRequested()
     {
         _settingsManager.Save(_settings);
     }
 
+
     private void ForceTopMost()
     {
         var hwnd = new WindowInteropHelper(this).Handle;
+
         NativeMethods.KeepWindowAboveTaskbar(hwnd);
     }
+
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
@@ -108,6 +121,7 @@ public partial class MainWindow : Window
         Topmost = true;
     }
 
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         PositionWindowOnMonitor();
@@ -118,56 +132,78 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 $"Pocket Pal failed to load its sprites:\n\n{ex.Message}",
                 "Pocket Pal - Asset Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
 
-            Application.Current.Shutdown();
+            System.Windows.Application.Current.Shutdown();
             return;
         }
 
+
         if (_engine != null)
         {
-            _engine.Movement.Position = new Models.Vector2D(
-                PetCanvas.Width / 2,
-                _groundY);
+            _engine.Movement.Position =
+                new Models.Vector2D(
+                    PetCanvas.Width / 2,
+                    _groundY);
         }
+
 
         _loop = new GameLoop(delta => _engine!.Update(delta));
         _loop.Start();
     }
 
+
     private void InitializeEngine()
     {
         var loader = new SpriteAssetLoader();
+
         var clips = loader.LoadAll();
+
         var library = new AnimationLibrary(clips);
 
         var idleClip = library.Get(Models.AnimationKey.Idle);
 
-        double spriteHeight = idleClip.FrameHeight * _spriteScale;
+
+        double spriteHeight =
+            idleClip.FrameHeight * _spriteScale;
+
 
         var workArea = SystemParameters.WorkArea;
 
-        _groundY = (workArea.Bottom - Top) - spriteHeight;
+
+        _groundY =
+            (workArea.Bottom - Top) - spriteHeight;
+
 
         var movement = new MovementController
         {
-            AreaWidth = PetCanvas.Width > 0 ? PetCanvas.Width : Width,
+            AreaWidth = PetCanvas.Width > 0
+                ? PetCanvas.Width
+                : Width,
+
             GroundY = _groundY,
-            SpriteWidth = idleClip.FrameWidth * _spriteScale
+
+            SpriteWidth =
+                idleClip.FrameWidth * _spriteScale
         };
 
-        movement.Position = new Models.Vector2D(
-            movement.AreaWidth / 2,
-            _groundY);
 
-        var renderer = new PetRenderer(
-            PetImage,
-            PetCanvas,
-            _spriteScale);
+        movement.Position =
+            new Models.Vector2D(
+                movement.AreaWidth / 2,
+                _groundY);
+
+
+        var renderer =
+            new PetRenderer(
+                PetImage,
+                PetCanvas,
+                _spriteScale);
+
 
         _engine = new PetEngine(
             movement,
@@ -178,21 +214,28 @@ public partial class MainWindow : Window
             _settings.StaticMode);
     }
 
+
     private void PositionWindowOnMonitor()
     {
-        var workArea = _screenHelper.GetWorkArea(
-            _settings.PreferredMonitorIndex);
+        var workArea =
+            _screenHelper.GetWorkArea(
+                _settings.PreferredMonitorIndex);
+
 
         const double windowHeight = 260;
 
+
         Left = workArea.Left;
         Top = workArea.Bottom - windowHeight;
+
         Width = workArea.Width;
         Height = windowHeight;
+
 
         PetCanvas.Width = Width;
         PetCanvas.Height = Height;
     }
+
 
     protected override void OnMouseDown(MouseButtonEventArgs e)
     {
@@ -201,11 +244,13 @@ public partial class MainWindow : Window
         if (_engine is null)
             return;
 
+
         _engine.States.Context.ForceSit = true;
 
         _engine.States.ForceTransition(
             new SittingState());
     }
+
 
     private void SetupTopmostTimer()
     {
@@ -214,54 +259,70 @@ public partial class MainWindow : Window
             Interval = TimeSpan.FromMilliseconds(100)
         };
 
+
         _topmostTimer.Tick += (_, _) =>
         {
             ForceTopMost();
         };
 
+
         _topmostTimer.Start();
     }
+
 
     private void SetupMouseListener()
     {
         _mouseProc = MouseHookCallback;
 
-        using var curProcess = System.Diagnostics.Process.GetCurrentProcess();
-        using var curModule = curProcess.MainModule;
+
+        using var curProcess =
+            System.Diagnostics.Process.GetCurrentProcess();
+
+        using var curModule =
+            curProcess.MainModule;
+
 
         if (curModule != null)
         {
-            _hookId = SetWindowsHookEx(
-                WH_MOUSE_LL,
-                _mouseProc,
-                GetModuleHandle(curModule.ModuleName),
-                0);
+            _hookId =
+                SetWindowsHookEx(
+                    WH_MOUSE_LL,
+                    _mouseProc,
+                    GetModuleHandle(curModule.ModuleName),
+                    0);
         }
     }
+
 
     private IntPtr MouseHookCallback(
         int nCode,
         IntPtr wParam,
         IntPtr lParam)
     {
-        if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDOWN)
+        if (nCode >= 0 &&
+            wParam == (IntPtr)WM_LBUTTONDOWN)
         {
             var hookStruct =
                 Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+
 
             var screenPoint =
                 new System.Windows.Point(
                     hookStruct.x,
                     hookStruct.y);
 
+
             var windowPoint =
                 PointFromScreen(screenPoint);
+
 
             bool clickedTaskbarArea =
                 hookStruct.y >=
                 SystemParameters.PrimaryScreenHeight - 40;
 
-            if (clickedTaskbarArea && _engine != null)
+
+            if (clickedTaskbarArea &&
+                _engine != null)
             {
                 Dispatcher.Invoke(() =>
                 {
@@ -270,11 +331,13 @@ public partial class MainWindow : Window
                     _engine.Movement.SetTarget(
                         windowPoint.X);
 
+
                     _engine.States.ForceTransition(
                         new RunningState());
                 });
             }
         }
+
 
         return CallNextHookEx(
             _hookId,
@@ -283,6 +346,7 @@ public partial class MainWindow : Window
             lParam);
     }
 
+
     private void SetupFullscreenDetection()
     {
         _fullscreenTimer = new DispatcherTimer
@@ -290,10 +354,14 @@ public partial class MainWindow : Window
             Interval = TimeSpan.FromMilliseconds(500)
         };
 
+
         _fullscreenTimer.Tick += (_, _) =>
         {
             var workArea = SystemParameters.WorkArea;
-            var screenHeight = SystemParameters.PrimaryScreenHeight;
+
+            var screenHeight =
+                SystemParameters.PrimaryScreenHeight;
+
 
             if (Math.Abs(workArea.Height - screenHeight) < 2)
                 Show();
@@ -301,8 +369,10 @@ public partial class MainWindow : Window
                 Hide();
         };
 
+
         _fullscreenTimer.Start();
     }
+
 
     private void OnDisplaySettingsChanged()
     {
@@ -310,11 +380,16 @@ public partial class MainWindow : Window
         {
             PositionWindowOnMonitor();
 
+
             if (_engine != null)
             {
-                _engine.Movement.AreaWidth = PetCanvas.Width;
+                _engine.Movement.AreaWidth =
+                    PetCanvas.Width;
 
-                var pos = _engine.Movement.Position;
+
+                var pos =
+                    _engine.Movement.Position;
+
 
                 double maxX =
                     Math.Max(
@@ -322,22 +397,31 @@ public partial class MainWindow : Window
                         _engine.Movement.AreaWidth -
                         _engine.Movement.SpriteWidth);
 
-                pos.X = Math.Min(pos.X, maxX);
+
+                pos.X =
+                    Math.Min(
+                        pos.X,
+                        maxX);
+
 
                 _engine.Movement.Position = pos;
             }
         });
     }
 
+
     private void OnClosed(object? sender, EventArgs e)
     {
         _loop?.Stop();
 
         _screenHelper.Dispose();
+
         _trayIcon.Dispose();
 
         _fullscreenTimer?.Stop();
+
         _topmostTimer?.Stop();
+
 
         if (_hookId != IntPtr.Zero)
         {
