@@ -84,7 +84,7 @@ public partial class MainWindow : Window
 
         SetupFullscreenDetection();
         SetupTopmostTimer();
-        SetupMouseListener();
+        //SetupMouseListener();
     }
 
     private void OnExitRequested()
