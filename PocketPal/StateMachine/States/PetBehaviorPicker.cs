@@ -7,11 +7,27 @@ namespace PocketPal.StateMachine.States;
 internal static class PetBehaviorPicker
 {
     /// <summary>
-    /// Picks a next state from the ground-based behaviors. Weighted so
-    /// idling/walking are common, running is less common, and sitting/sleeping are rare.
+    /// Picks the next state from normal ground behaviors.
     /// </summary>
     public static IPetState PickNextGroundState(PetContext context)
     {
+        // Static Mode:
+        // The pet does not wander.
+        // It only rests by sitting or sleeping.
+        if (context.StaticMode)
+        {
+            return context.Random.Next(2) switch
+            {
+                0 => new SittingState(),
+                _ => new SleepingState()
+            };
+        }
+
+
+        // Normal AI behaviour.
+        // Weighted:
+        // walking/running are common,
+        // sitting/sleeping are less common.
         double roll = context.Random.NextDouble();
 
         return roll switch
