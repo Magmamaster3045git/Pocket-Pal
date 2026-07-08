@@ -19,16 +19,19 @@ public sealed class SittingState : IPetState
 
     public void Enter(PetContext context)
     {
-        // Static mode:
-        // stay sitting until another static decision is made
+        // Static Mode:
+        // sit as a resting pose, then randomly choose sit/sleep again
         if (context.StaticMode && !_forced)
         {
-            _duration = 8.0 + context.Random.NextDouble() * 12.0;
+            _duration = 10.0 + context.Random.NextDouble() * 20.0;
         }
         else
         {
-            // Click destination sit = 10 seconds
-            // Normal random sit = 3-6 seconds
+            // Click-to-move arrival:
+            // sit for 10 seconds
+            //
+            // Normal AI:
+            // sit for 3-6 seconds
             _duration = _forced
                 ? 10.0
                 : 3.0 + context.Random.NextDouble() * 3.0;
@@ -50,15 +53,17 @@ public sealed class SittingState : IPetState
             return null;
 
 
-        // Static Mode only alternates between sitting and sleeping
+        // Static Mode never wanders.
+        // Only choose another resting pose.
         if (context.StaticMode && !_forced)
         {
-            return context.Random.NextDouble() < 0.5
+            return context.Random.Next(2) == 0
                 ? new SittingState()
                 : new SleepingState();
         }
 
 
+        // Normal behaviour resumes.
         return PetBehaviorPicker.PickNextGroundState(context);
     }
 
