@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using PocketPal.Assets;
 using PocketPal.Assets.AssetLoader;
 using PocketPal.Core;
+using PocketPal.StateMachine.States;
 using PocketPal.Movement;
 using PocketPal.Native;
 using PocketPal.Rendering;
@@ -202,12 +203,14 @@ public partial class MainWindow : Window
             return;
     
     
-        var pos = e.GetPosition(this);
+        // Clicking the pet makes it sit
+        _engine.States.Context.ForceSit = true;
     
-    
-        _engine.Movement.SetTarget(pos.X);
+        _engine.States.ForceTransition(
+            new SittingState()
+        );
     }
-
+    
     // Keep window always on top
     private void SetupTopmostTimer()
     {
