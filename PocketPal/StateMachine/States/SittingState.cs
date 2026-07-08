@@ -2,26 +2,42 @@ using PocketPal.Models;
 
 namespace PocketPal.StateMachine.States;
 
-/// <summary>Pet sits for a short while, then resumes normal ground behavior.</summary>
+/// <summary>
+/// Pet sits until 10 seconds have passed or the user clicks the taskbar.
+/// </summary>
 public sealed class SittingState : IPetState
 {
     public PetStateType Type => PetStateType.Sitting;
 
-    private double _duration;
+    private const double SitDuration = 10.0;
 
     public void Enter(PetContext context)
     {
-        _duration = 3.0 + context.Random.NextDouble() * 3.0;
-        context.Movement.Velocity = new Vector2D(0, context.Movement.Velocity.Y);
+        // Stop moving while sitting
+        context.Movement.Velocity = new Vector2D(0, 0);
     }
 
     public IPetState? Update(PetContext context, double deltaSeconds)
     {
-        if (context.TimeInState < _duration)
-            return null;
+        // If the user clicked somewhere on the taskbar,
+        // immediately get up and run there.
+        if (context.Movement.HasTarget)
+        {
+            context.ForceSit = false;
+            return new RunningState();
+        }
 
-        return PetBehaviorPicker.PickNextGroundState(context);
+        // Sit for 10 seconds
+        if (context.TimeInState >= SitDuration)
+        {
+            context.ForceSit = false;
+            return PetBehaviorPicker.PickNextGroundState(context);
+        }
+
+        return null;
     }
 
-    public void Exit(PetContext context) { }
+    public void Exit(PetContext context)
+    {
+    }
 }
