@@ -23,7 +23,8 @@ public sealed class PetEngine
         AnimationLibrary animations,
         PetRenderer renderer,
         int framesPerSecond,
-        Random random)
+        Random random,
+        bool staticMode = false)
     {
         Movement = movement;
         Animations = animations;
@@ -34,7 +35,10 @@ public sealed class PetEngine
         var context = new PetContext(
             movement,
             animations,
-            random);
+            random)
+        {
+            StaticMode = staticMode
+        };
 
         States = new PetStateMachine(
             context,
