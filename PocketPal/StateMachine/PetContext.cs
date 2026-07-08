@@ -23,6 +23,12 @@ public sealed class PetContext
     /// </summary>
     public bool ForceSit { get; set; }
 
+    /// <summary>
+    /// True when Static Mode is enabled.
+    /// In Static Mode the pet does not wander by itself.
+    /// </summary>
+    public bool StaticMode { get; set; }
+
     public Direction FacingDirection
     {
         get => Movement.Direction;
