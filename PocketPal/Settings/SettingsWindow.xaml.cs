@@ -7,7 +7,6 @@ public partial class SettingsWindow : Window
     private readonly AppSettings _settings;
     private readonly SettingsManager _manager = new();
 
-
     public SettingsWindow()
     {
         InitializeComponent();
@@ -21,7 +20,6 @@ public partial class SettingsWindow : Window
         CharacterBox.SelectedValue = _settings.SelectedCharacter;
     }
 
-
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         _settings.StartWithWindows =
@@ -33,13 +31,11 @@ public partial class SettingsWindow : Window
         _settings.StaticMode =
             StaticBox.IsChecked == true;
 
-
         if (CharacterBox.SelectedItem is System.Windows.Controls.ComboBoxItem item)
         {
             _settings.SelectedCharacter =
                 item.Content.ToString()!;
         }
-
 
         _manager.Save(_settings);
 
