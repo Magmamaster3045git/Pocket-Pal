@@ -21,7 +21,8 @@ public sealed class RunningState : IPetState
         PetContext context,
         double deltaSeconds)
     {
-        // Running to a mouse/taskbar click location
+        // Running caused by taskbar click.
+        // This is allowed even in Static Mode.
         if (context.Movement.HasTarget)
         {
             context.Movement.MoveTowardsTarget(
@@ -36,7 +37,7 @@ public sealed class RunningState : IPetState
 
 
                 // Static Mode:
-                // return to permanent resting behaviour
+                // immediately return to resting cycle forever
                 if (context.StaticMode)
                 {
                     return context.Random.Next(2) == 0
@@ -46,12 +47,22 @@ public sealed class RunningState : IPetState
 
 
                 // Normal mode:
-                // sit for 10 seconds after being clicked to move
+                // sit after reaching destination
                 return new SittingState(true);
             }
 
 
             return null;
+        }
+
+
+        // Static Mode:
+        // never allow random running
+        if (context.StaticMode)
+        {
+            return context.Random.Next(2) == 0
+                ? new SittingState()
+                : new SleepingState();
         }
 
 
