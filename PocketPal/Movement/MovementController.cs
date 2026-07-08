@@ -23,6 +23,11 @@ public sealed class MovementController
     public bool HasTarget => TargetX.HasValue;
 
 
+    // Used when clicking taskbar:
+    // after reaching the destination the pet can enter SittingState
+    public bool SitAfterTarget { get; set; }
+
+
     public bool IsGrounded => Position.Y >= GroundY;
 
 
@@ -48,6 +53,16 @@ public sealed class MovementController
     public void ClearTarget()
     {
         TargetX = null;
+        SitAfterTarget = false;
+    }
+
+
+    public bool HasReachedTarget()
+    {
+        if (!TargetX.HasValue)
+            return false;
+
+        return Math.Abs(TargetX.Value - Position.X) < 2;
     }
 
 
