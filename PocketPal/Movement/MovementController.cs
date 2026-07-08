@@ -17,7 +17,7 @@ public sealed class MovementController
     public double SpriteWidth { get; set; } = 64;
 
 
-    // NEW: click movement
+    // Click-to-move target
     public double? TargetX { get; private set; }
 
     public bool HasTarget => TargetX.HasValue;
@@ -25,22 +25,35 @@ public sealed class MovementController
 
     public bool IsGrounded => Position.Y >= GroundY;
 
+
     public event Action? HitLeftEdge;
     public event Action? HitRightEdge;
 
 
     public void SetTarget(double x)
     {
-        TargetX = Math.Clamp(x, 0, AreaWidth - SpriteWidth);
+        TargetX = Math.Clamp(
+            x,
+            0,
+            AreaWidth - SpriteWidth
+        );
 
-        if (TargetX > Position.X)
-            Direction = Direction.Right;
-        else
-            Direction = Direction.Left;
+
+        Direction = TargetX.Value >= Position.X
+            ? Direction.Right
+            : Direction.Left;
     }
 
 
-    public void MoveTowardsTarget(double speedPixelsPerSecond, double deltaSeconds)
+    public void ClearTarget()
+    {
+        TargetX = null;
+    }
+
+
+    public void MoveTowardsTarget(
+        double speedPixelsPerSecond,
+        double deltaSeconds)
     {
         if (!TargetX.HasValue)
             return;
@@ -49,6 +62,7 @@ public sealed class MovementController
         double distance = TargetX.Value - Position.X;
 
 
+        // Reached destination
         if (Math.Abs(distance) < 2)
         {
             Position = new Vector2D(
@@ -63,18 +77,25 @@ public sealed class MovementController
 
         double direction = Math.Sign(distance);
 
+
         Position = new Vector2D(
             Position.X + direction * speedPixelsPerSecond * deltaSeconds,
             GroundY
         );
 
 
+        Direction = direction > 0
+            ? Direction.Right
+            : Direction.Left;
+
+
         ClampToBounds();
     }
 
 
-
-    public void MoveHorizontal(double speedPixelsPerSecond, double deltaSeconds)
+    public void MoveHorizontal(
+        double speedPixelsPerSecond,
+        double deltaSeconds)
     {
         double signed =
             Direction == Direction.Right
@@ -92,13 +113,14 @@ public sealed class MovementController
     }
 
 
-
     private void ClampToBounds()
     {
         var pos = Position;
 
+
         if (pos.X < 0)
             pos.X = 0;
+
 
         if (pos.X + SpriteWidth > AreaWidth)
             pos.X = AreaWidth - SpriteWidth;
@@ -106,7 +128,6 @@ public sealed class MovementController
 
         Position = pos;
     }
-
 
 
     private void ClampToBoundsAndFlip()
