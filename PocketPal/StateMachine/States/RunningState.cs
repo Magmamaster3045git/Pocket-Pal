@@ -1,5 +1,4 @@
 using PocketPal.Models;
-using PocketPal.StateMachine;
 
 namespace PocketPal.StateMachine.States;
 
@@ -18,17 +17,29 @@ public sealed class RunningState : IPetState
 
     public IPetState? Update(PetContext context, double deltaSeconds)
     {
+        // Running to a mouse/taskbar click location
         if (context.Movement.HasTarget)
         {
+            double beforeX = context.Movement.Position.X;
+
             context.Movement.MoveTowardsTarget(
                 SpeedPixelsPerSecond,
                 deltaSeconds
             );
 
+            // Target disappeared = reached destination
+            if (!context.Movement.HasTarget)
+            {
+                context.ForceSit = true;
+
+                return new SittingState(true);
+            }
+
             return null;
         }
 
 
+        // Normal random running
         context.Movement.MoveHorizontal(
             SpeedPixelsPerSecond,
             deltaSeconds
@@ -41,6 +52,7 @@ public sealed class RunningState : IPetState
 
         return null;
     }
+
 
     public void Exit(PetContext context)
     {
