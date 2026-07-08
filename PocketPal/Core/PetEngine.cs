@@ -11,9 +11,13 @@ namespace PocketPal.Core;
 public sealed class PetEngine
 {
     public MovementController Movement { get; }
+
     public AnimationLibrary Animations { get; }
+
     public AnimationPlayer Player { get; }
+
     public PetStateMachine States { get; }
+
 
     private readonly PetRenderer _renderer;
 
@@ -30,6 +34,7 @@ public sealed class PetEngine
         Animations = animations;
         _renderer = renderer;
 
+
         Player = new AnimationPlayer(framesPerSecond);
 
 
@@ -42,16 +47,19 @@ public sealed class PetEngine
         };
 
 
+        // Start directly in resting mode if Static Mode is enabled.
         States = new PetStateMachine(
             context,
-            new IdleState());
+            staticMode
+                ? new SittingState()
+                : new IdleState());
     }
 
 
     public void Update(double deltaSeconds)
     {
-        // If a target exists, ensure the pet is running.
-        // RunningState owns the actual movement.
+        // Taskbar click movement.
+        // This is the only thing allowed to move a static pet.
         if (Movement.HasTarget &&
             States.CurrentType != PetStateType.Running)
         {
@@ -60,13 +68,25 @@ public sealed class PetEngine
         }
 
 
-        // State machine controls:
-        // - walking
-        // - running
-        // - sitting
-        // - sleeping
-        // - static mode behaviour
         States.Update(deltaSeconds);
+
+
+        // Safety lock:
+        // Static Mode should NEVER end up in walking/running/idle
+        // unless it is actively moving to a clicked destination.
+        if (States.Context.StaticMode &&
+            !Movement.HasTarget)
+        {
+            if (States.CurrentType == PetStateType.Idle ||
+                States.CurrentType == PetStateType.Walking ||
+                States.CurrentType == PetStateType.Running)
+            {
+                States.ForceTransition(
+                    States.Context.Random.Next(2) == 0
+                        ? new SittingState()
+                        : new SleepingState());
+            }
+        }
 
 
         AnimationClip clip = Animations.Resolve(
@@ -75,10 +95,13 @@ public sealed class PetEngine
 
 
         Player.Play(clip);
+
         Player.Update(deltaSeconds);
 
 
         _renderer.DrawFrame(Player);
-        _renderer.PositionSprite(Movement.Position);
+
+        _renderer.PositionSprite(
+            Movement.Position);
     }
 }
