@@ -5,8 +5,7 @@ namespace PocketPal.StateMachine;
 
 /// <summary>
 /// Owns exactly one active IPetState at a time and handles Enter/Exit
-/// lifecycle calls on transitions. This is the only class allowed to
-/// swap the current state.
+/// lifecycle calls on transitions.
 /// </summary>
 public sealed class PetStateMachine
 {
@@ -17,26 +16,32 @@ public sealed class PetStateMachine
     public event Action<IPetState>? StateChanged;
 
 
-    public PetStateMachine(PetContext context, IPetState initialState)
+    public PetStateMachine(
+        PetContext context,
+        IPetState initialState)
     {
         Context = context;
 
         CurrentState = initialState;
+
         CurrentState.Enter(Context);
     }
 
 
-    public PetStateType CurrentType => CurrentState.Type;
+    public PetStateType CurrentType =>
+        CurrentState.Type;
 
 
     public void Update(double deltaSeconds)
     {
         Context.TimeInState += deltaSeconds;
 
-        IPetState? next = CurrentState.Update(
-            Context,
-            deltaSeconds
-        );
+
+        IPetState? next =
+            CurrentState.Update(
+                Context,
+                deltaSeconds);
+
 
         if (next is not null)
             TransitionTo(next);
@@ -47,21 +52,42 @@ public sealed class PetStateMachine
     {
         CurrentState.Exit(Context);
 
+
         CurrentState = next;
+
 
         Context.TimeInState = 0;
 
+
         CurrentState.Enter(Context);
+
 
         StateChanged?.Invoke(CurrentState);
     }
 
 
     /// <summary>
-    /// Force a transition, such as clicking the pet.
+    /// Used for clicks and forced actions.
+    /// Allows RunningState temporarily even in Static Mode.
     /// </summary>
     public void ForceTransition(IPetState next)
     {
         TransitionTo(next);
+    }
+
+
+    /// <summary>
+    /// Returns the pet to static resting mode.
+    /// </summary>
+    public void ReturnToStaticRest()
+    {
+        if (!Context.StaticMode)
+            return;
+
+
+        TransitionTo(
+            Context.Random.Next(2) == 0
+                ? new SittingState()
+                : new SleepingState());
     }
 }
