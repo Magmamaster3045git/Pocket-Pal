@@ -13,9 +13,9 @@ public sealed class IdleState : IPetState
 
     private double _duration;
 
+
     public void Enter(PetContext context)
     {
-        // In Static Mode we don't want to spend time idling.
         if (context.StaticMode)
         {
             _duration = 0;
@@ -26,20 +26,25 @@ public sealed class IdleState : IPetState
             _duration = 2.0 + context.Random.NextDouble() * 4.0;
         }
 
-        context.Movement.Velocity = new Vector2D(
-            0,
-            context.Movement.Velocity.Y
-        );
+
+        context.Movement.Velocity =
+            new Vector2D(
+                0,
+                context.Movement.Velocity.Y);
     }
 
-    public IPetState? Update(PetContext context, double deltaSeconds)
+
+    public IPetState? Update(
+        PetContext context,
+        double deltaSeconds)
     {
-        // Clicking the pet still forces it to sit.
+        // User forced sit
         if (context.ForceSit)
-            return new SittingState();
+            return new SittingState(true);
+
 
         // Static Mode:
-        // Never wander. Immediately choose a resting pose.
+        // Only allow sitting or sleeping.
         if (context.StaticMode)
         {
             return context.Random.Next(2) == 0
@@ -47,13 +52,15 @@ public sealed class IdleState : IPetState
                 : new SleepingState();
         }
 
-        // Stay idle until the timer expires.
+
+        // Normal idle timer
         if (context.TimeInState < _duration)
             return null;
 
-        // Resume normal AI.
+
         return PetBehaviorPicker.PickNextGroundState(context);
     }
+
 
     public void Exit(PetContext context)
     {
