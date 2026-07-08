@@ -7,8 +7,6 @@ namespace PocketPal.StateMachine;
 /// <summary>
 /// Everything a state needs to read/modify, gathered in one place so
 /// states don't need direct references to the renderer, window, or engine.
-/// This is what keeps states testable and keeps the "no single God class"
-/// design goal intact.
 /// </summary>
 public sealed class PetContext
 {
@@ -16,8 +14,14 @@ public sealed class PetContext
     public AnimationLibrary Animations { get; }
     public Random Random { get; }
 
-    /// <summary>Seconds the current state has been active. Reset on Enter by the state machine.</summary>
+    /// <summary>Seconds the current state has been active.</summary>
     public double TimeInState { get; internal set; }
+
+    /// <summary>
+    /// True when the user has clicked the pet and wants it to sit.
+    /// Cleared when the sit ends or the user clicks the taskbar.
+    /// </summary>
+    public bool ForceSit { get; set; }
 
     public Direction FacingDirection
     {
@@ -25,9 +29,10 @@ public sealed class PetContext
         set => Movement.Direction = value;
     }
 
-    public bool ForceSit { get; set; }
-
-    public PetContext(MovementController movement, AnimationLibrary animations, Random random)
+    public PetContext(
+        MovementController movement,
+        AnimationLibrary animations,
+        Random random)
     {
         Movement = movement;
         Animations = animations;
