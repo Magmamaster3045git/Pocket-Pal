@@ -25,6 +25,8 @@ public sealed class PetContext
         set => Movement.Direction = value;
     }
 
+    public bool ForceSit { get; set; }
+
     public PetContext(MovementController movement, AnimationLibrary animations, Random random)
     {
         Movement = movement;
