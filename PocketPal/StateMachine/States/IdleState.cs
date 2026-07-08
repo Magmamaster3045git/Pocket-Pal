@@ -3,8 +3,9 @@ using PocketPal.Models;
 namespace PocketPal.StateMachine.States;
 
 /// <summary>
-/// Pet stands still, plays the Idle animation, then after a random
-/// duration randomly decides to walk, run, sit, or idle again.
+/// Pet stands still, plays the Idle animation, then decides what to do next.
+/// In Static Mode the pet immediately switches into a resting state instead
+/// of wandering around.
 /// </summary>
 public sealed class IdleState : IPetState
 {
@@ -14,8 +15,16 @@ public sealed class IdleState : IPetState
 
     public void Enter(PetContext context)
     {
-        // Idle for somewhere between 2 and 6 seconds before deciding what to do next.
-        _duration = 2.0 + context.Random.NextDouble() * 4.0;
+        // In Static Mode we don't want to spend time idling.
+        if (context.StaticMode)
+        {
+            _duration = 0;
+        }
+        else
+        {
+            // Idle for somewhere between 2 and 6 seconds.
+            _duration = 2.0 + context.Random.NextDouble() * 4.0;
+        }
 
         context.Movement.Velocity = new Vector2D(
             0,
@@ -25,15 +34,24 @@ public sealed class IdleState : IPetState
 
     public IPetState? Update(PetContext context, double deltaSeconds)
     {
-        // User clicked the pet
+        // Clicking the pet still forces it to sit.
         if (context.ForceSit)
             return new SittingState();
 
-        // Stay idle until the timer expires
+        // Static Mode:
+        // Never wander. Immediately choose a resting pose.
+        if (context.StaticMode)
+        {
+            return context.Random.Next(2) == 0
+                ? new SittingState()
+                : new SleepingState();
+        }
+
+        // Stay idle until the timer expires.
         if (context.TimeInState < _duration)
             return null;
 
-        // Resume normal AI
+        // Resume normal AI.
         return PetBehaviorPicker.PickNextGroundState(context);
     }
 
