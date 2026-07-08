@@ -21,6 +21,9 @@ public sealed class IdleState : IPetState
 
     public IPetState? Update(PetContext context, double deltaSeconds)
     {
+        if (context.ForceSit)
+            return new SittingState();
+            
         if (context.TimeInState < _duration)
             return null;
 
