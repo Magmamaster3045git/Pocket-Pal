@@ -25,11 +25,12 @@ public sealed class AppSettings
     public int Happiness { get; set; } = 100;
     public bool SoundEnabled { get; set; } = true;
 
-    public bool StartWithWindows { get; set; }
-    
+    public bool StartWithWindows { get; set; } = false;
+
     public bool ClickThrough { get; set; } = true;
-    
-    public bool StaticMode { get; set; }
-    
+
+    // When enabled, the pet stays where you place it instead of wandering.
+    public bool StaticMode { get; set; } = false;
+
     public string SelectedCharacter { get; set; } = "Dog";
 }
