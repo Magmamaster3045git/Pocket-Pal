@@ -110,7 +110,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            NativeMethods.RemoveClickThrough(hwnd);
+            NativeMethods.MakeInteractive(hwnd);
         }
         // ensure layering is stable
         Topmost = true;
